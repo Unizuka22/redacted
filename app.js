@@ -33,7 +33,7 @@
   const LIVE = {};              // mint -> { curve, meta, holders, bal, hist: [{t,p}], at }
   const USD = { sol: null, xmr: null };
   const VIEW = { tab: "trending", q: "", side: "buy", amt: "", bamt: "", busy: false };
-  const live = (m) => LIVE[m] || (LIVE[m] = { curve: null, meta: null, holders: [], bal: 0, sol: 0, hist: [], at: 0, err: null });
+  const live = (m) => LIVE[m] || (LIVE[m] = { curve: null, meta: null, dex: null, holders: [], bal: 0, sol: 0, hist: [], at: 0, err: null });
 
   async function refreshCurve(mint) {
     const L = live(mint);
@@ -46,17 +46,29 @@
     try { const m = await P.metadata(mint); if (m) { L.meta = m; upsert({ mint, name: m.name, symbol: m.symbol, image: m.image, description: m.description, links: m.links }); } } catch (e) { console.warn("meta", e); }
     return L;
   }
+  async function refreshDex(mint) {
+    const L = live(mint);
+    try { const d = await P.dex(mint); L.dex = d; if (d) { const c = S.coins.find((x) => x.mint === mint) || {}; upsert({ mint, name: c.name || d.name, symbol: c.symbol || d.symbol, image: c.image || d.image, createdAt: c.createdAt && c.createdAt < (d.created || Infinity) ? c.createdAt : (d.created || c.createdAt) }); } }
+    catch (e) { console.warn("dex", e); }
+    return L;
+  }
   async function refreshCoin(mint) {
     const L = live(mint);
-    await Promise.all([refreshCurve(mint), refreshMeta(mint)]);
+    await Promise.all([refreshCurve(mint), refreshMeta(mint), refreshDex(mint)]);
     if (W.publicKey) { try { L.bal = await P.balance(W.publicKey, mint); } catch { /* keep */ } }
     // holders are heavy on public RPCs: load after the page is up, never block on them
     P.holders(mint).then((h) => { L.holders = h; L.holdersErr = null; if (current === mint) renderCoin(mint); }).catch((e) => { L.holdersErr = "holders unavailable on this RPC"; if (current === mint) renderCoin(mint); });
     return L;
   }
   async function refreshBoard() {
-    await Promise.all(S.coins.slice(0, 40).map((c) => refreshCurve(c.mint).then(() => refreshMeta(c.mint))));
-    renderStats();
+    await Promise.all(S.coins.slice(0, 40).map((c) => Promise.all([refreshDex(c.mint), refreshCurve(c.mint)]).then(() => refreshMeta(c.mint))));
+    renderStats(); renderFeatured();
+  }
+  function renderFeatured() {
+    const g = $("featured-grid"); if (!g) return; g.innerHTML = "";
+    const list = S.coins.filter((c) => c.featured);
+    $("featured").hidden = !list.length;
+    list.forEach((c) => g.appendChild(card(c)));
   }
 
   // local quote on the curve, same math pump.fun runs
@@ -223,12 +235,14 @@
     const nm = el("div", "card-name", c.name || short(c.mint)); nm.appendChild(el("small", "", c.symbol ? "$" + c.symbol : "")); b.appendChild(nm);
     const by = el("div", "card-by"); by.append(c.creator ? "by " : ""); if (c.creator) by.appendChild(el("b", "", c.creator === C.launchpadWallet ? "redacted" : c.creator === W.publicKey ? "you" : short(c.creator))); by.append((c.creator ? " · " : "") + (c.createdAt ? ago(c.createdAt) + " ago" : short(c.mint)) + (cv && cv.complete ? " · ascended" : "")); b.appendChild(by);
     if (c.description) b.appendChild(el("div", "card-desc", c.description));
-    const f = el("div", "card-foot");
-    if (cv && cv.complete && cv.vSol === 0) f.appendChild(el("span", "mc", "ascended · trades on PumpSwap"));
+    const f = el("div", "card-foot"); const d = L.dex;
+    if (d && (!cv || cv.complete)) { f.appendChild(el("span", "mc", "mcap " + fmtUsd(d.mcap) + " · " + d.dex)); if (d.change24 != null) f.appendChild(el("span", "chg " + (d.change24 >= 0 ? "up" : "down"), (d.change24 >= 0 ? "+" : "") + d.change24.toFixed(1) + "% 24h")); }
+    else if (cv && cv.complete && cv.vSol === 0) f.appendChild(el("span", "mc", "ascended · trades on PumpSwap"));
     else if (cv) { f.appendChild(el("span", "mc", "mcap " + fmtN(cv.mcap, 2) + " SOL" + (USD.sol ? " · " + fmtUsd(cv.mcap * USD.sol) : ""))); f.appendChild(el("span", "chg", pct(cv.progress))); }
-    else f.appendChild(el("span", "", L.err ? L.err : "reading curve…"));
+    else f.appendChild(el("span", "", L.err ? L.err : "reading…"));
     b.appendChild(f);
-    const p = el("div", "prog" + (cv && cv.complete ? " grad" : "")); const i = el("i"); i.style.width = ((cv ? cv.progress : 0) * 100).toFixed(1) + "%"; p.appendChild(i); b.appendChild(p);
+    if (c.featured) b.appendChild(el("div", "card-by here", "✦ summoned here"));
+    if (cv && !cv.complete) { const p = el("div", "prog"); const i = el("i"); i.style.width = (cv.progress * 100).toFixed(1) + "%"; p.appendChild(i); b.appendChild(p); }
     a.appendChild(b); return a;
   }
   function renderBoard() {
@@ -244,6 +258,12 @@
 
   // ---------------- coin page ----------------
   function chart(L, symbol) {
+    if (L.dex && L.dex.pair) {
+      const box = el("div", "chart dex");
+      const h = el("div", "chart-head"); h.appendChild(el("b", "", "$" + (L.dex.priceUsd < 0.001 ? L.dex.priceUsd.toPrecision(3) : L.dex.priceUsd.toFixed(4)))); h.appendChild(el("span", "", "per " + symbol + " · live from DexScreener · " + L.dex.dex)); box.appendChild(h);
+      const f = el("iframe"); f.src = "https://dexscreener.com/solana/" + L.dex.pair + "?embed=1&theme=dark&trades=0&info=0"; f.title = symbol + " chart"; f.loading = "lazy"; f.allow = "clipboard-write"; box.appendChild(f);
+      return box;
+    }
     const box = el("div", "chart"); const cv = L.curve;
     const h = el("div", "chart-head"); h.appendChild(el("b", "", cv ? (cv.complete && cv.vSol === 0 ? "on PumpSwap" : fmtP(cv.price) + " SOL") : "…")); h.appendChild(el("span", "", "per " + symbol + " on pump.fun · live since you opened it")); box.appendChild(h);
     const pts = L.hist.length ? L.hist.slice(-160) : [{ t: now(), p: cv ? cv.price : 0 }];
@@ -264,8 +284,10 @@
   function tradeBox(c, L) {
     const cv = L.curve, sym = c.symbol || "TOKEN";
     const box = el("div", "trade"); box.appendChild(el("div", "trade-k", "pump.fun · SOL · signed in your wallet"));
-    if (!cv) { box.appendChild(el("div", "est", L.err || "Reading the curve…")); return box; }
-    if (cv.complete) { const n = el("div", "grad-note"); n.innerHTML = `<b>Graduated.</b> This curve is complete. Liquidity is on PumpSwap, LP burned. Buys and sells below route there automatically.`; box.appendChild(n); }
+    const d = L.dex;
+    if (!cv && !d) { box.appendChild(el("div", "est", L.err || "Reading the curve…")); return box; }
+    if (!cv && d) { const n = el("div", "grad-note"); n.innerHTML = `<b>Trades on ${d.dex}.</b> No pump.fun curve for this mint. Buys and sells below route to the ${d.dex} pool through PumpPortal, with the launchpad's 3% in the same signature.`; box.appendChild(n); }
+    else if (cv.complete) { const n = el("div", "grad-note"); n.innerHTML = `<b>Graduated.</b> This curve is complete. Liquidity is on PumpSwap, LP burned. Buys and sells below route there automatically.`; box.appendChild(n); }
     if (!W.publicKey) { const b = el("button", "place buy", "Connect wallet to trade"); b.type = "button"; b.onclick = openWallet; box.appendChild(b); return box; }
     const tabs = el("div", "ttabs");
     const bb = el("button", "buy" + (VIEW.side === "buy" ? " active" : ""), "Buy"); bb.type = "button"; const sb = el("button", "sell" + (VIEW.side === "sell" ? " active" : ""), "Sell"); sb.type = "button";
@@ -284,7 +306,12 @@
       const v = parseFloat(inp.value) || 0; e.innerHTML = ""; place.disabled = true;
       if (v <= 0) { e.appendChild(el("span", "", VIEW.side === "buy" ? "Enter SOL to spend." : "Enter " + sym + " to sell.")); return; }
       const feeLine = (sol) => `redacted ${C.platformFeePct}% = ${(sol * C.platformFeePct / 100).toFixed(4)} SOL`;
-      if (cv.complete) { e.innerHTML = `routes to PumpSwap via PumpPortal · ${VIEW.side === "buy" ? feeLine(v) : "redacted " + C.platformFeePct + "% of the SOL out"} · slippage ${C.slippage}%`; place.disabled = false; return; }
+      if (!cv || cv.complete) {
+        const px = d && d.priceNative ? d.priceNative : 0; const outSol = px ? v * px : 0;
+        e.innerHTML = VIEW.side === "buy" ? `${px ? "~<b>" + fmtT(v * (1 - C.platformFeePct / 100) / px) + " " + sym + "</b><br>" : ""}routes to ${d ? d.dex : "PumpSwap"} via PumpPortal · ${feeLine(v)} · slippage ${C.slippage}%` : `${px ? "~<b>" + (outSol * (1 - C.platformFeePct / 100)).toFixed(4) + " SOL</b> after fees<br>" : ""}routes to ${d ? d.dex : "PumpSwap"} via PumpPortal · ${px ? feeLine(outSol) : "redacted " + C.platformFeePct + "% of the SOL out"} · slippage ${C.slippage}%`;
+        if (VIEW.side === "sell" && v > have) { e.appendChild(el("span", "warn", " You hold " + fmtT(have) + " " + sym + ".")); return; }
+        place.disabled = false; return;
+      }
       if (VIEW.side === "buy") { const q = quoteBuy(cv, v * (1 - C.platformFeePct / 100)); e.innerHTML = `~<b>${fmtT(q.tokens)} ${sym}</b> (${pct(q.tokens / C.supply)} of supply)<br>${feeLine(v)} · pump.fun 1% ${q.fee.toFixed(4)} SOL · impact ${pct(q.impact)}`; }
       else { if (v > have) { e.appendChild(el("span", "warn", "You hold " + fmtT(have) + " " + sym + ".")); return; } const q = quoteSell(cv, v); e.innerHTML = `~<b>${(q.solOut * (1 - C.platformFeePct / 100)).toFixed(4)} SOL</b> after fees<br>${feeLine(q.solOut)} · pump.fun 1% ${q.fee.toFixed(4)} SOL · impact ${pct(q.impact)}`; }
       place.disabled = false;
@@ -296,7 +323,8 @@
       try {
         let feeSol = 0;
         if (VIEW.side === "buy") feeSol = v * C.platformFeePct / 100;
-        else if (!cv.complete) feeSol = quoteSell(cv, v).solOut * C.platformFeePct / 100;
+        else if (cv && !cv.complete) feeSol = quoteSell(cv, v).solOut * C.platformFeePct / 100;
+        else if (d && d.priceNative) feeSol = v * d.priceNative * C.platformFeePct / 100;
         const sig = await P.trade({ wallet: W, mint: c.mint, action: VIEW.side, amount: VIEW.side === "buy" ? v * (1 - C.platformFeePct / 100) : v, denominatedInSol: VIEW.side === "buy", feeSol, feeTo: C.launchpadWallet });
         toast((VIEW.side === "buy" ? "Bought" : "Sold") + " · " + short(sig)); VIEW.amt = "";
         await refreshCoin(c.mint); refreshWallet(); renderAll();
@@ -341,8 +369,11 @@
     $("coin-title").textContent = name + " · $" + sym;
     $("coin-bar").textContent = `redacted@monero › ${String(sym).toLowerCase()} · ${short(mint)}`;
     const chips = $("coin-chips"); chips.innerHTML = "";
-    chips.appendChild(el("span", cv && cv.complete ? "grad" : "live", cv ? (cv.complete ? "ascended · PumpSwap" : "alive on pump.fun") : "reading…"));
-    if (cv && !(cv.complete && cv.vSol === 0)) chips.appendChild(el("span", "", "mcap " + fmtN(cv.mcap, 2) + " SOL"));
+    const dx = L.dex;
+    if (c.featured) chips.appendChild(el("span", "here", "✦ summoned here"));
+    chips.appendChild(el("span", cv && cv.complete ? "grad" : "live", cv ? (cv.complete ? "ascended · PumpSwap" : "alive on pump.fun") : dx ? "alive on " + dx.dex : "reading…"));
+    if (dx && (!cv || cv.complete)) chips.appendChild(el("span", "", "mcap " + fmtUsd(dx.mcap)));
+    else if (cv) chips.appendChild(el("span", "", "mcap " + fmtN(cv.mcap, 2) + " SOL"));
     const root = $("coin"); const st = root.scrollTop; root.innerHTML = "";
 
     const head = el("div", "coin-head"); head.appendChild(avatar({ ...c, meta: L.meta }));
@@ -351,7 +382,8 @@
     const desc = c.description || (L.meta && L.meta.description); if (desc) hb.appendChild(el("p", "coin-desc", desc));
     const by = el("div", "coin-by");
     const creator = (cv && cv.creator) || c.creator; by.appendChild(el("span", "", (creator ? "creator " + (creator === C.launchpadWallet ? "redacted (fees → launchpad)" : creator === W.publicKey ? "you" : short(creator)) : "") + (c.createdAt ? " · " + ago(c.createdAt) + " ago" : "")));
-    const pf = el("a", "", "pump.fun ↗"); pf.href = "https://pump.fun/coin/" + mint; pf.target = "_blank"; pf.rel = "noopener"; by.appendChild(pf);
+    if (cv || /pump$/.test(mint)) { const pf = el("a", "", "pump.fun ↗"); pf.href = "https://pump.fun/coin/" + mint; pf.target = "_blank"; pf.rel = "noopener"; by.appendChild(pf); }
+    if (dx) { const ds = el("a", "", "dexscreener ↗"); ds.href = dx.url; ds.target = "_blank"; ds.rel = "noopener"; by.appendChild(ds); }
     const sc = el("a", "", "solscan ↗"); sc.href = "https://solscan.io/token/" + mint; sc.target = "_blank"; sc.rel = "noopener"; by.appendChild(sc);
     const links = c.links || (L.meta && L.meta.links) || {};
     for (const [k, l] of [["web", "website"], ["x", "x"], ["tg", "telegram"]]) if (links[k]) { const a = el("a", "", l + " ↗"); a.href = links[k]; a.target = "_blank"; a.rel = "noopener"; by.appendChild(a); }
@@ -361,7 +393,12 @@
     head.appendChild(hb); root.appendChild(head);
 
     const kv = el("div", "kv"); const add = (k, v, s) => { const d = el("div"); d.appendChild(el("span", "", k)); const b = el("b", "", v); if (s) b.appendChild(el("small", "", s)); d.appendChild(b); kv.appendChild(d); };
-    if (cv && cv.complete && cv.vSol === 0) { add("price", "PumpSwap", "see pump.fun"); add("market cap", "PumpSwap", "pool"); add("in curve", "migrated", "LP burned"); }
+    if (dx && (!cv || cv.complete)) {
+      add("price", dx.priceUsd < 0.001 ? "$" + dx.priceUsd.toPrecision(3) : "$" + dx.priceUsd.toFixed(4), dx.priceNative ? dx.priceNative.toPrecision(3) + " SOL" : "");
+      add("market cap", fmtUsd(dx.mcap), dx.dex); add("24h volume", fmtUsd(dx.vol24), dx.change24 != null ? (dx.change24 >= 0 ? "+" : "") + dx.change24.toFixed(1) + "%" : "");
+      add("liquidity", fmtUsd(dx.liquidity), dx.pairs + (dx.pairs === 1 ? " pair" : " pairs")); add("holders", String(L.holders.length) + (L.holders.length >= 20 ? "+" : ""), "top 20 read"); add("you hold", W.publicKey ? fmtT(L.bal || 0) : "–", sym);
+    }
+    else if (cv && cv.complete && cv.vSol === 0) { add("price", "PumpSwap", "see pump.fun"); add("market cap", "PumpSwap", "pool"); add("in curve", "migrated", "LP burned"); }
     else if (cv) { add("price", fmtP(cv.price), "SOL"); add("market cap", fmtN(cv.mcap, 2) + " SOL", USD.sol ? fmtUsd(cv.mcap * USD.sol) : ""); add("in curve", cv.rSol.toFixed(2) + " SOL", "real"); add("holders", String(L.holders.length) + (L.holders.length >= 20 ? "+" : ""), "top 20 read"); add("curve", pct(cv.progress), cv.complete ? "done" : "to PumpSwap"); add("you hold", W.publicKey ? fmtT(L.bal || 0) : "–", sym); }
     else add("status", L.err || "reading…");
     root.appendChild(kv);
@@ -381,7 +418,7 @@
     if (!L.holders.length) { const tr = el("tr"); tr.appendChild(el("td", "", L.holdersErr || "reading holders…")); hbdy.appendChild(tr); }
     ht.appendChild(hbdy); hs.appendChild(ht); root.appendChild(hs);
 
-    const act = el("div", "sec"); const ah = el("div", "sec-h"); ah.append("activity"); const al = el("a", "", "every trade, on pump.fun ↗"); al.href = "https://pump.fun/coin/" + mint; al.target = "_blank"; al.rel = "noopener"; ah.appendChild(al); act.appendChild(ah); root.appendChild(act);
+    const act = el("div", "sec"); const ah = el("div", "sec-h"); ah.append("activity"); const al = el("a", "", dx ? "every trade, on DexScreener ↗" : "every trade, on pump.fun ↗"); al.href = dx ? dx.url : "https://pump.fun/coin/" + mint; al.target = "_blank"; al.rel = "noopener"; ah.appendChild(al); act.appendChild(ah); root.appendChild(act);
     root.scrollTop = st;
   }
 
@@ -394,17 +431,19 @@
       if (!S.coins.some((c) => c.mint === current)) upsert({ mint: current, createdAt: now() });
       $("coin-panel").scrollIntoView({ block: "start", behavior: "smooth" });
       renderCoin(current); refreshCoin(current).then(() => { if (current === m[1]) renderCoin(current); });
-      clearInterval(pollTimer); pollTimer = setInterval(() => { if (current && !VIEW.busy) refreshCurve(current).then(() => { const ae = document.activeElement; const typing = ae && ae.tagName === "INPUT" && $("coin").contains(ae); if (!typing) renderCoin(current); }); }, 20000);
+      clearInterval(pollTimer); pollTimer = setInterval(() => { if (current && !VIEW.busy) Promise.all([refreshCurve(current), refreshDex(current)]).then(() => { const ae = document.activeElement; const typing = ae && ae.tagName === "INPUT" && $("coin").contains(ae); if (!typing) renderCoin(current); }); }, 20000);
     } else { current = null; clearInterval(pollTimer); $("coin-panel").hidden = true; document.body.classList.add("no-coin"); }
   }
   function refreshCurrent() { if (current) refreshCoin(current).then(() => renderCoin(current)); }
-  function renderAll() { renderHeader(); renderStats(); route(); }
+  function renderAll() { renderHeader(); renderStats(); renderFeatured(); route(); }
 
   // ---------------- boot ----------------
   function boot() {
     if (!window.solanaWeb3) { toast("Could not load @solana/web3.js from the CDN. Chain reads and trades are off.", true, 10000); }
-    load(); save();
-    bindCreate();
+    load();
+    (C.featured || []).forEach((f) => { if (f && f.mint) upsert({ mint: f.mint, featured: true, createdAt: (S.coins.find((x) => x.mint === f.mint) || {}).createdAt || now() }); });
+    save();
+    bindCreate(); renderFeatured();
 
     $("connect").addEventListener("click", openWallet);
     // header menu: three lines on the right

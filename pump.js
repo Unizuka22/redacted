@@ -67,6 +67,23 @@
       return { name: m.name, symbol: m.symbol, uri: m.uri, description: json && json.description || "", image, links: { web: json && json.website || "", x: json && json.twitter || "", tg: json && json.telegram || "" } };
     },
 
+    // DexScreener: best Solana pair for a mint (by liquidity). Works for any DEX, before or after pump.fun.
+    async dex(mint) {
+      const r = await fetch("https://api.dexscreener.com/latest/dex/tokens/" + mint, { cache: "no-store" });
+      if (!r.ok) throw new Error("DexScreener " + r.status);
+      const j = await r.json();
+      const pairs = (j.pairs || []).filter((x) => x.chainId === "solana");
+      if (!pairs.length) return null;
+      pairs.sort((a, b) => ((b.liquidity && b.liquidity.usd) || 0) - ((a.liquidity && a.liquidity.usd) || 0));
+      const x = pairs[0];
+      return {
+        pair: x.pairAddress, dex: x.dexId, url: x.url, name: x.baseToken && x.baseToken.name, symbol: x.baseToken && x.baseToken.symbol,
+        priceUsd: +x.priceUsd || 0, priceNative: +x.priceNative || 0, mcap: x.marketCap || x.fdv || 0,
+        vol24: (x.volume && x.volume.h24) || 0, change24: x.priceChange && typeof x.priceChange.h24 === "number" ? x.priceChange.h24 : null,
+        liquidity: (x.liquidity && x.liquidity.usd) || 0, image: x.info && x.info.imageUrl, created: x.pairCreatedAt || null, pairs: pairs.length,
+      };
+    },
+
     // Largest holders with owners resolved.
     async holders(mint) {
       return withRpc(async (c) => {

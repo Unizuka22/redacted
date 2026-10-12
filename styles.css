@@ -622,3 +622,13 @@ body.no-coin .col-left { padding-right: 0; }
 .menu .ext { margin-left: auto; color: var(--ink-soft); }
 .create[hidden] { display: none; }
 @media (max-width: 600px) { .menu { right: -8px; } }
+
+/* ---------- featured + dex chart ---------- */
+.featured { margin: 22px 0 6px; }
+.featured-h { margin-bottom: 10px; }
+.featured .card { background: rgba(255,102,0,.06); border-color: rgba(255,102,0,.4); }
+.card-by.here { color: var(--xmr-2); }
+.chips span.here { color: #fff; border-color: var(--xmr); background: rgba(255,102,0,.2); }
+.chart.dex { padding: 10px 10px 8px; }
+.chart iframe { width: 100%; height: 440px; border: 0; border-radius: 10px; display: block; background: #000; }
+@media (max-width: 760px) { .chart iframe { height: 360px; } }

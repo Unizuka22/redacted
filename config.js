@@ -11,6 +11,11 @@ window.REDACTED_CONFIG = {
     bridge: "",   // POST json: { mint, amount, holderKey, burnSig, wallet } -> { ok, inscription }
   },
 
+  // Coins shown on the front page as summoned here. Live data comes from DexScreener and the chain.
+  featured: [
+    { mint: "9N3rcoL5R1ysfDJiAX2kL4fw3MQHbfxMEZqshBNcq5ZV" },
+  ],
+
   // How coins get created when you press Launch.
   //   "backend" : through api.launch, creator = launchpadWallet (fees to launchpad). Recommended.
   //   "wallet"  : the connected wallet signs the create itself via PumpPortal. Creator = the user,

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Summon · Redacted</title>
+  <meta name="description" content="Redacted launches coins as pairs: a pump.fun token on Solana and its twin inscribed on Monero like Ordinals on Bitcoin. Trade on pump.fun, burn, receive on Monero one for one." />
+  <meta property="og:title" content="Redacted" />
+  <meta property="og:description" content="Launch a coin on Monero. Trades on pump.fun. Burn there, receive on Monero one for one." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Redacted" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="og.png" />
+  <meta name="theme-color" content="#ff6600" />
+  <link rel="icon" href="mark.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="brand" href="#/" aria-label="Redacted home">
+      <img src="mark.svg" alt="" class="brand-logo" />
+      <span class="brand-name">Redacted</span>
+    </a>
+    <div class="pulse" id="pulse" title="Live Monero block height">
+      <span class="dot"></span>
+      <span>alive on monero</span>
+      <span class="slot" id="height">height …</span>
+    </div>
+    <button class="connect" id="connect" type="button" title="Connect a Solana wallet">
+      <span class="cdot"></span><span id="connect-label">Connect wallet</span>
+    </button>
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
+      <nav class="menu" id="menu" hidden>
+        <a href="index.html">What is Redacted</a>
+        <a href="index.html">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="#" target="_blank" rel="noopener">X <span class="ext">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="col col-left scroll">
+      <div class="intro">
+        <p class="rite">Summon a coin · born on pump.fun, crosses to Monero</p>
+        <section class="create" id="create">
+          <div class="create-head">
+            <h2>Summon a coin</h2>
+            <span class="tag-free">0.7 SOL · 3% on trades</span>
+          </div>
+          <form id="create-form" novalidate>
+            <div class="row2">
+              <label class="field"><span>Name</span><input id="c-name" maxlength="32" placeholder="Stealth Cat" autocomplete="off" required /></label>
+              <label class="field"><span>Ticker</span><input id="c-ticker" maxlength="10" placeholder="STEALTH" autocomplete="off" required /></label>
+            </div>
+            <label class="field"><span>Description</span><textarea id="c-desc" maxlength="280" rows="3" placeholder="One sentence. What is it, why does it exist."></textarea></label>
+            <div class="imgrow">
+              <div class="avatar big" id="c-preview">?</div>
+              <label class="file">
+                <input id="c-img" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                <span class="file-btn">Choose image</span>
+                <span class="file-hint" id="c-img-hint">png / jpg / webp / gif · max 4 MB</span>
+              </label>
+            </div>
+            <details class="more">
+              <summary>Links and dev buy</summary>
+              <div class="row2">
+                <label class="field"><span>Website</span><input id="c-web" placeholder="https://" autocomplete="off" /></label>
+                <label class="field"><span>X</span><input id="c-x" placeholder="https://x.com/" autocomplete="off" /></label>
+              </div>
+              <div class="row2">
+                <label class="field"><span>Telegram</span><input id="c-tg" placeholder="https://t.me/" autocomplete="off" /></label>
+                <label class="field"><span>Dev buy (SOL, on pump.fun)</span><input id="c-buy" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+              </div>
+            </details>
+            <div class="create-foot">
+              <p class="create-err" id="c-err" aria-live="polite"></p>
+              <button class="launch" id="c-launch" type="submit">Summon</button>
+            </div>
+          </form>
+        </section>
+        <p class="fine">0.7 SOL at birth plus your dev buy, signed once in your wallet. The launchpad creates the coin from its own wallet so every creator fee comes home.</p>
+      </div>
+    </aside>
+    <section class="col col-right">
+      <div class="right-top">
+        <div class="panel" id="coin-panel" hidden>
+          <div class="panel-head">
+            <a class="back" href="#/">← close</a>
+            <h2 id="coin-title">Coin</h2>
+            <div class="chips" id="coin-chips"></div>
+          </div>
+          <div class="term">
+            <div class="term-bar"><i></i><i></i><i></i><span id="coin-bar">redacted@monero</span></div>
+            <div class="term-out scroll" id="coin"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="wallet-modal" hidden>
+    <div class="modal-card glass" role="dialog" aria-modal="true" aria-labelledby="wm-title">
+      <button class="modal-x" id="wm-close" aria-label="Close">×</button>
+      <h3 id="wm-title">Connect wallet</h3>
+      <p id="wm-sub">Pick a Solana wallet.</p>
+      <div id="wm-body"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+  <script src="config.js"></script>
+  <script src="wallet.js"></script>
+  <script src="pump.js"></script>
+  <script src="mark.js"></script>
+  <script src="glitch.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

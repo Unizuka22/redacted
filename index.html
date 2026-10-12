@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redacted</title>
+  <meta name="description" content="Redacted launches coins as pairs: a pump.fun token on Solana and its twin inscribed on Monero like Ordinals on Bitcoin. Trade on pump.fun, burn, receive on Monero one for one." />
+  <meta property="og:title" content="Redacted" />
+  <meta property="og:description" content="Launch a coin on Monero. Trades on pump.fun. Burn there, receive on Monero one for one." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Redacted" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="og.png" />
+  <meta name="theme-color" content="#ff6600" />
+  <link rel="icon" href="mark.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="brand" href="#/" aria-label="Redacted home">
+      <img src="mark.svg" alt="" class="brand-logo" />
+      <span class="brand-name">Redacted</span>
+    </a>
+    <div class="pulse" id="pulse" title="Live Monero block height">
+      <span class="dot"></span>
+      <span>alive on monero</span>
+      <span class="slot" id="height">height …</span>
+    </div>
+    <button class="connect" id="connect" type="button" title="Connect a Solana wallet">
+      <span class="cdot"></span><span id="connect-label">Connect wallet</span>
+    </button>
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
+      <nav class="menu" id="menu" hidden>
+        <button type="button" data-go="explain">What is Redacted</button>
+        <a href="summon.html">Summon a coin</a>
+        <a href="docs.html">Docs</a>
+        <a href="#" target="_blank" rel="noopener">X <span class="ext">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ================= LEFT: pitch, stats, create ================= -->
+    <aside class="col col-left scroll">
+      <div class="intro">
+        <div class="explain" id="explain">
+        <p class="rite">A coin is born in the light and crosses into the dark</p>
+        <p class="lede"><span class="dropcap">E</span>very coin here lives twice. It is born on <a class="link" href="https://pump.fun/" target="_blank" rel="noopener">pump.fun</a>, where the crowd can see it, trade it and chase it. And whenever you choose, you burn it there and it is reborn on Monero, one for one, where no sender, no receiver and no amount survive. Monero has no token layer and no smart contracts. Neither does Bitcoin. The Monero side is what <a class="link" href="https://docs.ordinals.com/" target="_blank" rel="noopener">Ordinals</a> did on BTC: write the thing into the transaction itself and let a reader find it.</p>
+
+        <p>One summoning makes a pair. A pump.fun token on Solana and its twin inscribed into a Monero transaction: same name, same ticker, same billion supply, locked <b>1:1</b>. You trade on pump.fun's curve with everyone else, in SOL, and at <b>85 SOL</b> it ascends to PumpSwap like any pump.fun coin. Nothing is minted on Monero that was not burned on Solana.</p>
+
+        <p>Every coin is created from the launchpad's own wallet, so pump.fun's creator share on every trade comes home. The launchpad keeps <b>3%</b> of every trade made here and <b>0.7 SOL</b> at birth. That pays for the inscriptions, the reader, and the hands that carry your bag across until the reader runs on its own.</p>
+
+        </div>
+
+        <div class="stats" id="stats" aria-label="Platform stats">
+          <div class="stat"><b id="st-coins">0</b><span>coins summoned</span></div>
+          <div class="stat"><b id="st-sol">0</b><span>SOL in curves</span></div>
+          <div class="stat"><b id="st-grad">0</b><span>ascended</span></div>
+        </div>
+
+
+
+        <div class="meta">
+          <div class="badges">
+            <span class="xmr">Monero</span><span>paired 1:1 with pump.fun</span><span>inscribed like Ordinals</span><span>3% · 0.7 SOL</span><span>v0.4.0</span>
+          </div>
+          <p class="fine">Live build. Wallets are real, curves are read from Solana, trades are signed in your wallet and sent through PumpPortal with the launchpad's 3% in the same signature. The crossing to Monero is done by hand until the reader runs on its own.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= RIGHT: board / coin ================= -->
+    <section class="col col-right">
+      <div class="right-top">
+        <div class="panel" id="coin-panel" hidden>
+          <div class="panel-head">
+            <a class="back" href="#/">← close</a>
+            <h2 id="coin-title">Coin</h2>
+            <div class="chips" id="coin-chips"></div>
+          </div>
+          <div class="term">
+            <div class="term-bar"><i></i><i></i><i></i><span id="coin-bar">redacted@monero</span></div>
+            <div class="term-out scroll" id="coin"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="wallet-modal" hidden>
+    <div class="modal-card glass" role="dialog" aria-modal="true" aria-labelledby="wm-title">
+      <button class="modal-x" id="wm-close" aria-label="Close">×</button>
+      <h3 id="wm-title">Connect wallet</h3>
+      <p id="wm-sub">Pick a Solana wallet.</p>
+      <div id="wm-body"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+  <script src="config.js"></script>
+  <script src="wallet.js"></script>
+  <script src="pump.js"></script>
+  <script src="mark.js"></script>
+  <script src="glitch.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

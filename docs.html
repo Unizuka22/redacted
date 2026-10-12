@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redacted Docs</title>
+  <meta name="description" content="Redacted documentation: how a coin launches as a pair, trades on pump.fun, and is burned there to arrive on Monero one for one, inscribed like Ordinals on Bitcoin." />
+  <meta property="og:title" content="Redacted Docs" />
+  <meta property="og:description" content="Launch on Monero, trade on pump.fun, bridge one for one. How the pair works, start to finish." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="og.png" />
+  <meta name="theme-color" content="#ff6600" />
+  <link rel="icon" href="mark.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="docs-page">
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="brand" href="index.html" aria-label="Redacted home">
+      <img src="mark.svg" alt="" class="brand-logo" />
+      <span class="brand-name">Redacted</span>
+    </a>
+    <span class="docs-crumb">/ docs</span>
+    <a class="docs-btn" href="index.html" style="margin-left:auto">← Board</a>
+    <a class="docs-btn active" href="docs.html">Docs</a>
+  </header>
+
+  <div class="docs">
+    <nav class="docs-nav" aria-label="Docs sections">
+      <a href="#overview">Overview</a>
+      <a href="#pair">The pair</a>
+      <a href="#tech">The tech</a>
+      <a href="#inscriptions">Inscriptions</a>
+      <a href="#launch">Launching</a>
+      <a href="#trading">Trading</a>
+      <a href="#bridge">Bridging</a>
+      <a href="#graduation">Graduation</a>
+      <a href="#fees">Fees and costs</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#integration">Integration</a>
+      <a href="#safety">Safety</a>
+    </nav>
+
+    <article class="docs-body">
+      <section id="overview">
+        <h1>Redacted <em>docs</em></h1>
+        <p class="docs-lede">Redacted launches coins as pairs. One click deploys a token on pump.fun and inscribes its twin on Monero. You trade on pump.fun with everyone else. When you want your bag off the public ledger, you burn the pump.fun tokens and the same amount is credited to you on Monero, one for one.</p>
+        <p>Monero has no token layer and no smart contracts, the same as Bitcoin. The Monero side uses exactly the trick Ordinals used on BTC: the coin and every bridge are written into transactions, and an indexer reads the chain back to agree on who holds what.</p>
+        <ul class="docs-pills"><li class="on">Monero</li><li>Paired 1:1 with pump.fun</li><li>Inscribed like Ordinals</li><li>pump.fun's 1% fee</li><li>Creator fees → launchpad</li><li>85 SOL to graduate</li></ul>
+      </section>
+
+      <section id="pair">
+        <h2>The pair</h2>
+        <p>Every Redacted coin exists in two places at once, with one supply shared between them.</p>
+        <div class="docs-grid">
+          <div><h4>pump.fun · Solana</h4><p>An SPL token on pump.fun's bonding curve. This is where price is found, where liquidity lives, and where anyone can buy or sell with SOL. It graduates to PumpSwap at 85 SOL like any other pump.fun coin.</p></div>
+          <div><h4>Monero · inscribed</h4><p>The twin. Same name, same ticker, same 1,000,000,000 supply. Balances are held against holder keys recorded in Monero transactions. It starts at zero and only grows by burns on the Solana side.</p></div>
+        </div>
+        <p>The lock is simple arithmetic: tokens on pump.fun plus tokens on Monero always equals one billion. A token moves to Monero only by being burned on Solana, so the Monero side can never hold more than has been destroyed on the public side. Nothing is minted that was not burned.</p>
+        <p class="docs-note">The bridge is one way by design. Monero is where bags go to stop being watched. Anyone who wants back onto the public ledger sells on pump.fun before bridging, not after.</p>
+      </section>
+
+      <section id="tech">
+        <h2>The tech, start to finish</h2>
+        <p class="docs-lede">Redacted is pump.fun's launch model with a Monero twin attached. Pump.fun proved the shape: one curve for every coin, no presale, and when the curve fills the liquidity moves to a DEX and the LP is burned so nobody can pull it. Redacted keeps every step as pump.fun runs it and adds a second chain the tokens can retire to.</p>
+
+        <h3>Pump.fun, piece by piece</h3>
+        <p>On Solana a pump.fun coin is an SPL token. The bonding curve is a program that holds SOL on one side and tokens on the other. Every buy and sell is an instruction to that program. At 85 SOL the program migrates the SOL and the reserved tokens into PumpSwap and burns the LP tokens. The burn is the whole point: once the pool exists nobody, not the dev and not pump.fun, can remove the liquidity, and the curve can never trade again.</p>
+
+        <h3>What Redacted adds</h3>
+        <table class="docs-table">
+          <thead><tr><th>Piece</th><th>pump.fun on Solana</th><th>Redacted on Monero</th></tr></thead>
+          <tbody>
+            <tr><td>The coin</td><td>An SPL token mint on pump.fun.</td><td>A launch inscription in a Monero transaction naming the mint it is paired with, the way Ordinals and BRC-20 live inside Bitcoin transactions.</td></tr>
+            <tr><td>Price and liquidity</td><td>pump.fun's curve, then PumpSwap.</td><td>None. The Monero side has no curve and no pool. It holds balances, not markets.</td></tr>
+            <tr><td>A trade</td><td>A program instruction in SOL.</td><td>Happens on pump.fun. Redacted shows it, does not run it.</td></tr>
+            <tr><td>Moving tokens across</td><td>Send to the burn address with a memo.</td><td>A bridge inscription credits the same amount to the holder key named in the memo. One for one.</td></tr>
+            <tr><td>Who owns the tokens</td><td>The Solana wallet.</td><td>A holder key. Monero hides the sender, so balances are held against a key you control, not an address anyone can see.</td></tr>
+            <tr><td>Graduation</td><td>85 SOL, migrate to PumpSwap, LP burned.</td><td>Unchanged. Bridged tokens stay bridged. The Monero side does not care whether the curve is open.</td></tr>
+            <tr><td>Fees</td><td>1% to pump.fun.</td><td>None. Bridging costs a Monero network fee.</td></tr>
+            <tr><td>Privacy</td><td>Everything public.</td><td>Ring signatures, stealth addresses and RingCT hide the sender, receiver and amount of every inscription.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>One coin, start to finish</h3>
+        <ol class="docs-steps">
+          <li><b>Launch.</b> You give a name, ticker, picture and description. Redacted creates the pump.fun coin and, in the same breath, sends a Monero transaction carrying the launch inscription: the pump.fun mint address, the metadata hash and your holder key. The two are now paired.</li>
+          <li><b>Trade.</b> Buys and sells happen on pump.fun's curve with the same 30 SOL and 1,073,000,000 token virtual reserves every pump.fun coin starts with. Redacted reads the curve and shows the chart, the holders and the progress.</li>
+          <li><b>Burn.</b> You send pump.fun tokens to the burn address with a memo holding your Monero holder key. Those tokens are gone from Solana for good.</li>
+          <li><b>Credit.</b> The indexer sees the burn confirm, writes a bridge inscription to Monero for the same amount, and credits your holder key. Your bag is now on Monero, one for one, with no sender, receiver or amount visible on-chain.</li>
+          <li><b>Order.</b> Solana order decides which burns count and when. Monero block order decides the inscription record. Any indexer replaying both chains reaches the same balances.</li>
+          <li><b>Graduate.</b> At 85 SOL pump.fun migrates the liquidity to PumpSwap and burns the LP. Redacted moves the coin to On PumpSwap. Bridging keeps working after graduation, because burning a PumpSwap token is the same as burning a curve token.</li>
+          <li><b>Hold.</b> Tokens on Monero sit against your holder key. Transfer between keys is a signed inscription. They never go back to Solana.</li>
+        </ol>
+
+        <h3>Why the burn matters</h3>
+        <p>Pump.fun's LP burn makes graduation irreversible: nobody can pull the pool. Redacted's bridge burn makes privacy irreversible in the same way: the tokens that reach Monero were destroyed on the public side, so the public ledger can only ever show that something left, never where it went or how much is held by whom. Two burns, two one-way doors, and the supply stays exactly one billion across both.</p>
+
+        <p class="docs-note">What ships today: real wallets, real pump.fun curves read from Solana, real trades through PumpPortal, launches through the launchpad backend with creator fees to the launchpad wallet, and bridge requests the launchpad fulfils by hand. The inscription format and the indexer described here are the design the automated Monero side runs on.</p>
+      </section>
+
+      <section id="inscriptions">
+        <h2>Inscribed like Ordinals</h2>
+        <p>Ordinals put data on Bitcoin without changing Bitcoin: an inscription rides inside a normal transaction, and anyone running an indexer reads the chain in order and agrees on what exists. BRC-20 turned that into tokens with three operations, deploy, mint and transfer, interpreted off-chain.</p>
+        <p>Redacted does the same thing on Monero. Each action is a small inscription in a Monero transaction, and the launchpad is the indexer.</p>
+        <table class="docs-table">
+          <thead><tr><th>Inscription</th><th>What it carries</th><th>Ordinals equivalent</th></tr></thead>
+          <tbody>
+            <tr><td>launch</td><td>The pump.fun mint it pairs with, metadata hash, the dev's holder key.</td><td>deploy</td></tr>
+            <tr><td>bridge</td><td>Coin id, Solana burn signature, amount, receiving holder key.</td><td>mint</td></tr>
+            <tr><td>transfer</td><td>Coin id, amount, from key, to key. Signed by the sender's key.</td><td>transfer</td></tr>
+          </tbody>
+        </table>
+        <p>Order is decided by the chain, not by the server. Two indexers replaying the same blocks reach the same balances, exactly as two Ordinals indexers agree on the same inscriptions. Monero adds one thing Bitcoin never had: the sender, the receiver and the amount of every inscription are hidden by default.</p>
+      </section>
+
+      <section id="launch">
+        <h2>Launching a coin</h2>
+        <ol class="docs-steps">
+          <li><b>Connect a wallet.</b> Phantom, Solflare, Backpack or any injected Solana wallet. Redacted never holds keys. Everything is signed in the wallet.</li>
+          <li><b>Name, ticker, picture.</b> Two to thirty-two characters for the name, two to ten letters or digits for the ticker, and an image up to 4 MB. pump.fun requires the image.</li>
+          <li><b>Description and links.</b> One sentence, up to 280 characters. Website, X and Telegram are optional and must be real https links.</li>
+          <li><b>Dev buy.</b> Optional, in SOL. Executed as the first buy on the curve, so the whole board can see what the dev holds.</li>
+          <li><b>Sign one transfer.</b> Your wallet sends 0.7 SOL plus your dev buy to the launchpad wallet. That is the only thing you sign.</li>
+          <li><b>The launchpad creates the coin.</b> The backend creates it on pump.fun from the launchpad wallet, runs your dev buy and sends you the tokens. The coin appears under New with its mint.</li>
+        </ol>
+        <h3>Why the launchpad wallet is the creator</h3>
+        <p>pump.fun pays a share of every trade to the wallet that created the coin, for the life of the coin. Redacted creates every coin from one wallet, so every creator fee on every coin comes to the launchpad. That revenue is what pays for the Monero side: the indexer, the inscriptions, and the manual swaps until the indexer ships. The dev gets the coin and the dev buy, not the fee stream.</p>
+        <p class="docs-note">Supply is 1,000,000,000 on pump.fun. 793,100,000 sell on the curve, 206,900,000 seed PumpSwap at graduation. The Monero side starts at zero and fills only by burns. A second mode, wallet mode, lets the connected wallet create the coin directly through PumpPortal for testing. In that mode the creator is the user, so the fees go to them. It is off by default.</p>
+      </section>
+
+      <section id="trading">
+        <h2>Trading</h2>
+        <p>Trading is pump.fun's. Open any coin and Redacted reads its bonding curve straight from Solana: virtual reserves, real reserves, completion flag and creator, decoded from the curve account. The trade box quotes from that state before you commit:</p>
+        <ul class="docs-list">
+          <li>Tokens or SOL you receive, and the share of supply that represents.</li>
+          <li>pump.fun's 1% fee in SOL.</li>
+          <li>Price impact against the current spot price, plus the slippage and priority fee the transaction will carry.</li>
+        </ul>
+        <p>Pressing buy or sell asks PumpPortal for a transaction. Redacted appends one more instruction to it, the 3% transfer to the launchpad wallet, so the fee and the trade are one signature and one block. Your wallet signs it, Redacted sends it to the RPC and waits for confirmation. After graduation the same box routes to PumpSwap. Quick buttons fill 0.1, 0.5, 1 SOL or your balance on the buy side, and 25, 50, 75 or 100 percent of your bag on the sell side. The holders table is the top twenty token accounts on chain with owners resolved, refreshed every time you open the coin, and the price polls every twelve seconds while the page is open.</p>
+        <p>Any existing pump.fun coin can be tracked by pasting its mint in the bar above the board. Redacted reads its metadata and curve and lists it like a native launch.</p>
+      </section>
+
+      <section id="bridge">
+        <h2>Bridging</h2>
+        <p>Below the trade box on every coin page is the bridge. It shows your pump.fun balance on the left, your Monero holder key on the right, and an amount field.</p>
+        <ol class="docs-steps">
+          <li><b>Pick an amount</b> of your pump.fun bag. 25, 50 and 100 percent buttons are there.</li>
+          <li><b>Request.</b> The request carries the mint, the amount, your wallet and your holder key to the launchpad.</li>
+          <li><b>Burn.</b> The launchpad replies with the burn instructions. You send the tokens to the burn address with your holder key in the memo. They are gone from Solana for good.</li>
+          <li><b>Receive.</b> Once the burn confirms, the same number of tokens is inscribed to your holder key on Monero.</li>
+        </ol>
+        <p>Until the indexer ships, the launchpad confirms burns and writes inscriptions by hand, funded by the creator fees. There is no platform fee on the bridge. The only cost is the Monero network fee for the inscription. The bridge works before and after graduation. If the bridge endpoint is not configured yet, requests are kept in your browser so nothing is lost.</p>
+      </section>
+
+      <section id="graduation">
+        <h2>Graduation</h2>
+        <p>When pump.fun's curve has collected 85 SOL of real deposits, or the last curve token sells, pump.fun migrates the SOL and the 206,900,000 reserved tokens into a PumpSwap pool and burns the LP tokens. From that moment the coin trades on PumpSwap and the board moves it to On PumpSwap.</p>
+        <p>Nothing changes on the Monero side. Balances already bridged stay where they are, and tokens bought on PumpSwap can still be burned and bridged exactly as before. On the ledger the coin moves from Ascending to Ascended.</p>
+      </section>
+
+      <section id="fees">
+        <h2>Fees and costs</h2>
+        <table class="docs-table">
+          <thead><tr><th>Action</th><th>Fee</th><th>Who gets it</th></tr></thead>
+          <tbody>
+            <tr><td>Summon a coin</td><td class="num">0.7 SOL</td><td>The launchpad. Fixed, paid once, on top of any dev buy. Breakdown below.</td></tr>
+            <tr><td>Buy through Redacted</td><td class="num">3%</td><td>The launchpad. Taken from the SOL you send, as a transfer inside the same transaction you sign.</td></tr>
+            <tr><td>Sell through Redacted</td><td class="num">3%</td><td>The launchpad. Taken from the SOL you receive, same transaction.</td></tr>
+            <tr><td>Creator fee</td><td class="num">pump.fun's share</td><td>The launchpad wallet, for the life of every coin, because every coin is created from it.</td></tr>
+            <tr><td>pump.fun</td><td class="num">1%</td><td>pump.fun, on every curve trade. Not ours.</td></tr>
+            <tr><td>PumpPortal</td><td class="num">0.5%</td><td>PumpPortal, for building the transaction. Not ours.</td></tr>
+            <tr><td>Cross to Monero</td><td class="num">0</td><td>Nobody. Covered by the birth cost.</td></tr>
+            <tr><td>Ascension</td><td class="num">0</td><td>All collected SOL goes to the PumpSwap pool.</td></tr>
+          </tbody>
+        </table>
+        <p>A 1 SOL buy through Redacted therefore sends 0.03 SOL to the launchpad and 0.97 SOL into pump.fun, where pump.fun and PumpPortal take their cut. The dev never earns from fees. What the dev holds is what the dev bought.</p>
+
+        <h3>Where the 0.7 SOL goes</h3>
+        <table class="docs-table">
+          <thead><tr><th>Item</th><th>SOL</th><th>What it covers</th></tr></thead>
+          <tbody>
+            <tr><td>pump.fun creation</td><td class="num">0.020</td><td>Mint, metadata account and bonding curve rent, paid by the launchpad wallet as creator.</td></tr>
+            <tr><td>Network and priority fees</td><td class="num">0.010</td><td>Create, dev buy, and the token transfer to the summoner's wallet, at a priority that lands in the same block.</td></tr>
+            <tr><td>Token account rent</td><td class="num">0.005</td><td>The summoner's and the launchpad's token accounts for the new mint.</td></tr>
+            <tr><td>Monero inscriptions</td><td class="num">0.050</td><td>The birth inscription plus a budget of crossings for the coin's life. One inscription is a few ten-thousandths of an XMR; this reserve covers dozens.</td></tr>
+            <tr><td>Crossings by hand</td><td class="num">0.150</td><td>Confirming burns on Solana and writing inscriptions on Monero manually until the reader runs on its own.</td></tr>
+            <tr><td>RPC and infrastructure</td><td class="num">0.050</td><td>Keyed Solana RPC, the Monero node, the backend that holds the launchpad key.</td></tr>
+            <tr><td>Reader development</td><td class="num">0.200</td><td>Building the automated indexer that replaces the hands.</td></tr>
+            <tr><td>Launchpad</td><td class="num">0.215</td><td>Margin. What is left after everything above.</td></tr>
+            <tr><td><b>Total</b></td><td class="num"><b>0.700</b></td><td></td></tr>
+          </tbody>
+        </table>
+        <p class="docs-note">Chain costs move. The first three lines are pump.fun's and Solana's prices today and will be re-measured; the rest is the launchpad's own budget. The 0.7 SOL figure stays fixed so that summoning never costs a different amount on a different day.</p>
+      </section>
+
+      <section id="wallet">
+        <h2>Wallet</h2>
+        <p>Connect wallet in the header opens a picker for Phantom, Solflare, Backpack or any injected Solana wallet. Detected wallets connect in one click; the rest link to their install page. Once connected the pill shows your address and SOL balance, and reconnects on your next visit if the wallet allows it.</p>
+        <p>Redacted never sees a private key. Three things ever ask for a signature: the SOL transfer at launch, and each buy or sell. Every one of them is a transaction you can read in the wallet before approving.</p>
+        <p>Alongside the Solana wallet, Redacted keeps a Monero holder key for you in the browser. It is the key your bridged tokens are credited to. Click the wallet pill to see it. Back it up: if the browser storage is cleared, the key is gone.</p>
+      </section>
+
+      <section id="integration">
+        <h2>Integration</h2>
+        <p>The front end is static. Everything that needs a private key or a database runs in a backend you host, wired in through <code>config.js</code>. Fill in <code>launchpadWallet</code> and the three endpoints below.</p>
+        <h3>POST api.launch</h3>
+        <p>Multipart form: <code>image</code>, <code>name</code>, <code>symbol</code>, <code>description</code>, <code>website</code>, <code>twitter</code>, <code>telegram</code>, <code>devBuySol</code>, <code>buyer</code> (the user's wallet), <code>transferSig</code> (the signature of the SOL transfer to the launchpad wallet), <code>holderKey</code>. The backend verifies the transfer landed, creates the coin on pump.fun from the launchpad wallet, executes the dev buy, sends the tokens to <code>buyer</code>, and replies <code>{ "mint": "...", "signature": "..." }</code>.</p>
+        <h3>GET api.coins</h3>
+        <p>Returns the coins this launchpad created, newest first: <code>[{ mint, name, symbol, image, description, createdAt, creator }]</code>. The front end merges it with the browser's own list every minute, so visitors see the same board.</p>
+        <h3>POST api.bridge</h3>
+        <p>JSON: <code>{ mint, amount, holderKey, wallet, at }</code>. The backend queues it, replies <code>{ "ok": true, "inscription": "..." }</code> or burn instructions, confirms the burn on Solana, and writes the inscription on Monero.</p>
+        <h3>Everything else in config.js</h3>
+        <ul class="docs-list">
+          <li><code>rpc</code>: Solana RPC endpoints, tried in order. Put a keyed one first.</li>
+          <li><code>pumpPortal</code>, <code>slippage</code>, <code>priorityFee</code>: how buy and sell transactions are built.</li>
+          <li><code>createMode</code>: <code>backend</code> (fees to the launchpad) or <code>wallet</code> (testing only, fees to the user).</li>
+          <li><code>launchCostSol</code> and <code>platformFeePct</code>: the 0.7 SOL birth cost and the 3% trade fee. Both go to <code>launchpadWallet</code>.</li>
+        </ul>
+      </section>
+
+
+      <section id="safety">
+        <h2>Safety</h2>
+        <p>Redacted moves real SOL. Read every transaction in your wallet before you approve it. The launch transfer goes to the launchpad wallet shown in the config line under the stats; if that line says the config is missing, nothing can be launched and nothing should be sent.</p>
+        <p>Assume the ordinary outcome for launchpad coins: most go to zero. The bridge is one way, so anything you move to Monero can only be sold on Monero. Never put in funds you are not fine losing, and never trust a launchpad that hides the curve.</p>
+      </section>
+    </article>
+  </div>
+
+  <script src="mark.js"></script>
+  <script src="glitch.js"></script>
+  <script>
+    (() => {
+      const links = [...document.querySelectorAll(".docs-nav a")];
+      const secs = links.map((a) => document.querySelector(a.getAttribute("href")));
+      const io = new IntersectionObserver((es) => {
+        es.forEach((e) => { if (e.isIntersecting) { const id = "#" + e.target.id; links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === id)); } });
+      }, { rootMargin: "-20% 0px -70% 0px" });
+      secs.forEach((s) => s && io.observe(s));
+    })();
+  </script>
+</body>
+</html>
